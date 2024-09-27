@@ -1,12 +1,13 @@
 import cosas.*
 
-object camion {
-	const property cosas = #{}
-	const pesoTara = 1000
-		
+class Camion{
+	const property cosas = null
+	const pesoTara = null
+	var property pesoMaximo = null
+
 	method cargar(cosa) {
 		cosas.add(cosa)
-		cosa.cargar()
+		cosa.serCargada()
 	}
 
 	method descargar(cosa) {
@@ -25,12 +26,16 @@ object camion {
 		return cosas.find({cosa => cosa.nivelDePeligrosidad() == nivel})
 	}
 
+	method pesoCarga() {
+		return cosas.sum({cosa => cosa.peso()})
+	}
+
 	method pesoTotal() {
-		return pesoTara + cosas.sum({cosa => cosa.peso()})
+		return pesoTara + self.pesoCarga()
 	}
 
 	method excedidoDePeso() {
-		return self.pesoTotal() > 2500
+		return self.pesoTotal() > pesoMaximo
 	}
 
 	method objetosQueSuperanPeligrosidad(nivel) {
@@ -38,7 +43,7 @@ object camion {
 	}
 
 	method objetosMasPeligrososQue(cosa) {
-		return cosas.filter({carga => carga.nivelDePeligrosidad() > cosa.nivelDePeligrosidad()})
+		return self.objetosQueSuperanPeligrosidad(cosa.nivelDePeligrosidad())
 	}
 
 	method puedeCircularEnRuta(nivelMaximoPeligrosidad) {
@@ -47,11 +52,7 @@ object camion {
 	}
 
 	method tienenAlgoPesadoEntre(min, max) {
-		return cosas.any({cosa => self.cosaConPesoEntre(cosa, min, max) })
-	}
-
-	method cosaConPesoEntre(cosa, min, max) {
-		return cosa.peso() > min and cosa.peso() < max 
+		return cosas.any({cosa => cosa.peso().between(min, max) })
 	}
 
 	method cosaMasPesada() {
@@ -66,37 +67,31 @@ object camion {
 		return cosas.sum({cosa => cosa.bulto()})
 	}
 
-	method pesoSuperaLimite(camino) {
-		return self.pesoTotal() > camino.limiteDePeso()
-	}
-
-	method validarRuta(camino) {
-		if(not self.puedeCircularEnRuta(camino.limiteDePeligrosidad()) and self.pesoSuperaLimite(camino)) {
-			self.error("El camion no puede recorrer la ruta asignada")
-		}
-	}
-
-	method validarDestino(destino) {
-		if(self.totalBultos() > destino.limiteDeBultos()) {
-			self.error("El numero de bultos del camion" + self.totalBultos() +
-			"excede el limite de bultos del destino")
-		}
-	}
-
 	method transportar(destino, camino) {
-		self.validarRuta(camino)
-		self.validarDestino(destino)
+		camino.puedeCircular(self)
+		destino.puedeDescargar(self)
 		destino.descargar(cosas)
 		cosas.clear()
 	}
 
 }
 
-object almacen {
-	const property galpon = #{}
-	var property limiteDeBultos = 3
+ 
+
+class Almacen {
+	const property galpon = null
+	var property limiteDeBultos = null
+
+	method puedeDescargar(vehiculo) {
+		return if(vehiculo.totalBultos() > limiteDeBultos) {
+			self.error("El numero de bultos del camion: " + vehiculo.totalBultos() +
+			"excede el limite de bultos del destino: " + limiteDeBultos)
+		}
+	}
 
 	method descargar(cosas) {
 		galpon.addAll(cosas)
 	}
 }
+
+

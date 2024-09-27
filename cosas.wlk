@@ -6,16 +6,16 @@ object knightRider {
 		return 1
 	}
 
-	method cargar() {
+	method serCargada() {
 
 	}
 }
 
 object bumblebee {
-	var property forma = bumblebeeAuto
+	var property forma = formaAuto
 
 	method peso() {
-		return 800
+		return forma.peso()
 	}
 
 	method nivelDePeligrosidad() {
@@ -26,34 +26,45 @@ object bumblebee {
 		return 2
 	}
 
-	method cargar() {
-		forma = self.formaOpuesta()
+	method serCargada() {
+		forma = forma.serCargada()
 	}
 
-	method formaOpuesta() {
-		if(self.nivelDePeligrosidad() == 15) {
-			return bumblebeeRobot
-		}
-		return bumblebeeAuto
-	}
 }
 
-object bumblebeeAuto {
+object formaAuto {
 
 	method nivelDePeligrosidad() {
 		return 15
 	}
+
+	method peso() {
+		return 800
+	}
+
+	method serCargada() {
+		return formaRobot
+	}
 }
 
-object bumblebeeRobot {
+object formaRobot {
 
 	 method nivelDePeligrosidad() {
 		return 30
 	 }
+
+	 method peso() {
+		return 800
+	}
+
+	method serCargada() {
+		return self
+	}
+
 }
 
-object paqueteDeLadrillos {
-	var property cantidad = 0
+class PaqueteDeLadrillos {
+	var property cantidad = null
 
 	method peso() {
 		return cantidad * 2
@@ -64,23 +75,24 @@ object paqueteDeLadrillos {
 	}
 
 	method bulto() {
-		if (cantidad <= 100) {
-			return 1
+		return if (cantidad <= 100) {
+			1
 		}
-		if (cantidad > 100 and cantidad < 301) {
-			return 2
+		else if (cantidad < 301) {
+			2
 		}
-		return 3
+		else 3
 	}
 
 
-	method cargar() {
+	method serCargada() {
 		cantidad += 12
 	}
 }
 
-object arenaGranel {
-	var property peso = 0
+
+class ArenaGranel {
+	var property peso = null
 
 	method nivelDePeligrosidad() {
 		return 1
@@ -90,34 +102,38 @@ object arenaGranel {
 		return 1
 	}
 
-	method cargar() {
+	method serCargada() {
 		peso +=  20
 	}
 }
 
-object bateriaAntiaerea {
-	var tieneMisiles = false
+class BateriaAntiaerea {
+	var tieneMisiles = null
 
 	method tieneMisiles() {
 	  return tieneMisiles
 	}
 
-	method cambiarEstadoDeMisiles() {
-		tieneMisiles = not tieneMisiles
+	method cargarMisiles() {
+		tieneMisiles = true
+	}
+
+	method descargarMisiles() {
+		tieneMisiles = false
 	}
 
 	method peso() {
-		if(tieneMisiles) {
-			return 300
+		return if(tieneMisiles) {
+			300
 		}
-		return 200	
+		else 200	
 	} 
 
 	method bulto() {
-		if(tieneMisiles) {
-			return 2
+		return if(tieneMisiles) {
+			2
 		}
-		return 1
+		else 1
 	}
 
 	method nivelDePeligrosidad() {
@@ -127,13 +143,13 @@ object bateriaAntiaerea {
 		return 0
 	}
 
-	method cargar() {
-		self.cambiarEstadoDeMisiles()
+	method serCargada() {
+		self.cargarMisiles()
 	}
 }
 
-object contenedorPortuario {
-	const property contenido = #{}
+class ContenedorPortuario {
+	const property contenido = null
 
 	method guardarEnContenedor(cosa) {
 		contenido.add(cosa)
@@ -147,21 +163,32 @@ object contenedorPortuario {
 		return 100 + contenido.sum({cosa => cosa.peso()})
 	}
 
+	method validarContenido() {
+		return if(contenido.isEmpty()){
+			self.error("El contenedor se encuentra vacio")
+		}
+	}
+
 	method nivelDePeligrosidad() {
+		self.validarContenido()
 		return contenido.max({cosa => cosa.nivelDePeligrosidad()})
 	}
 
+	method pesoContenido() {
+		return contenido.sum({cosa => cosa.bulto()})
+	}
+
 	method bulto() {
-		return 1 + contenido.sum({cosa => cosa.bulto()})
+		return 1 + self.pesoContenido()
 	}
 	
-	method cargar() {
-		contenido.forEach({cosa => cosa.cargar()})
+	method serCargada() {
+		contenido.forEach({cosa => cosa.serCargada()})
 	}
 }
 
-object residuosRadioactivos {
-	var property peso = 0
+class ResiduosRadioactivos {
+	var property peso = null
 
 	method nivelDePeligrosidad() {
 		return 200
@@ -171,27 +198,27 @@ object residuosRadioactivos {
 		return 1
 	}
 
-	method cargar() {
+	method serCargada() {
 		peso += 15
 	}
 }
 
-object embalaje {
-	var property objetoEmbalado = knightRider
+class Embalaje {
+	var property cosaEmbalada = null
 
 	method peso() {
-		return objetoEmbalado.peso()
+		return cosaEmbalada.peso()
 	}
 
 	method nivelDePeligrosidad() {
-		return objetoEmbalado.nivelDePeligrosidad() / 2
+		return cosaEmbalada.nivelDePeligrosidad() / 2
 	}
 
 	method bulto() {
 		return 2
 	}
 
-	method cargar() {
+	method serCargada() {
 		
 	}
 }
@@ -202,17 +229,25 @@ object ruta9 {
 		return 11
 	}
 
-	method limiteDePeso() {
-		return 0
+	method puedeCircular(vehiculo) {
+		return if(not vehiculo.puedeCircularEnRuta(self.limiteDePeligrosidad())) {
+			self.error("El vehiculo no puede recorrer el camino" + self)
+		}
 	}
 
 }
 
-object caminosVecinales {
-	var property limiteDePeso = 0
+class CaminosVecinales {
+	var property limiteDePeso = null
 
-	method limiteDePeligrosidad() {
-		return 0
+	method superaPesoLimite(vehiculo) {
+		return vehiculo.pesoTotal() > limiteDePeso
+	}
+
+	method puedeCircular(vehiculo) {
+		return if(self.superaPesoLimite(vehiculo) or vehiculo.excedidoDePeso()) {
+			self.error("El vehiculo no puede recorrer el camino" + self)
+		}
 	}
 
 }

@@ -2,9 +2,21 @@ import camion.*
 import cosas.*
 
 describe "El camion" {
+    const paqueteDeLadrillos = new PaqueteDeLadrillos(cantidad = 0)
+    const camion = new Camion(cosas=#{}, pesoTara = 1000, pesoMaximo = 2500)
+    const arenaGranel = new ArenaGranel(peso = 0)
+    const arenaGranel2 = new ArenaGranel(peso = 0)
+    const embalaje = new Embalaje(cosaEmbalada = knightRider)
+    const residuosRadioactivos = new ResiduosRadioactivos(peso = 0)
+    const contenedorPortuario = new ContenedorPortuario(contenido = #{})
+    const bateriaAntiaerea = new BateriaAntiaerea(tieneMisiles = false)
+    const almacen = new Almacen(galpon = #{}, limiteDeBultos = 3)
+    const caminosVecinales = new CaminosVecinales(limiteDePeso = 0)
+  
+
   test "El camion carga" {
 
-    assert.equals(bumblebeeAuto, bumblebee.forma())
+    assert.equals(formaAuto, bumblebee.forma())
     paqueteDeLadrillos.cantidad(101)
     assert.equals(101, paqueteDeLadrillos.cantidad())
 
@@ -13,7 +25,7 @@ describe "El camion" {
     camion.cargar(bumblebee)
 
     assert.equals(#{knightRider, paqueteDeLadrillos, bumblebee}, camion.cosas())
-    assert.equals(bumblebeeRobot, bumblebee.forma())
+    assert.equals(formaRobot, bumblebee.forma())
     assert.equals(113, paqueteDeLadrillos.cantidad())
 
     camion.descargar(knightRider)
@@ -73,6 +85,7 @@ describe "El camion" {
         camion.cargar(paqueteDeLadrillos)
         camion.cargar(bumblebee)
 
+        assert.notThat(camion.tienenAlgoPesadoEntre(9999, 10000))
         assert.that(camion.tienenAlgoPesadoEntre(200, 230))
         assert.that(camion.tienenAlgoPesadoEntre(499, 501))
         assert.equals(bumblebee, camion.cosaMasPesada())
@@ -81,15 +94,18 @@ describe "El camion" {
     }
 
     test "Consecuencias de la carga" {
-        bumblebee.forma(bumblebeeRobot)
+        bumblebee.forma(formaRobot)
         paqueteDeLadrillos.cantidad(100)
         arenaGranel.peso(100)
+        arenaGranel2.peso(100)
         residuosRadioactivos.peso(100)
         contenedorPortuario.guardarEnContenedor(residuosRadioactivos)
+        embalaje.cosaEmbalada(arenaGranel2)
 
         assert.equals(#{residuosRadioactivos}, contenedorPortuario.contenido())
-        assert.equals(bumblebeeRobot, bumblebee.forma())
+        assert.equals(formaRobot, bumblebee.forma())
         assert.equals(100, arenaGranel.peso())
+        assert.equals(100, arenaGranel2.peso())
         assert.equals(200, paqueteDeLadrillos.peso())
         
         camion.cargar(bumblebee)
@@ -97,12 +113,14 @@ describe "El camion" {
         camion.cargar(arenaGranel)
         camion.cargar(bateriaAntiaerea)
         camion.cargar(contenedorPortuario)
+        camion.cargar(embalaje)
 
         assert.equals(115, residuosRadioactivos.peso())
-        assert.equals(bumblebeeAuto, bumblebee.forma())
+        assert.equals(formaRobot, bumblebee.forma())
         assert.that(bateriaAntiaerea.tieneMisiles())
         assert.equals(224, paqueteDeLadrillos.peso())
         assert.equals(120, arenaGranel.peso())
+        assert.equals(100, arenaGranel2.peso())
 
     }
 
@@ -140,10 +158,7 @@ describe "El camion" {
 
         almacen.limiteDeBultos(100)
 
-        camion.transportar(almacen, caminosVecinales)
-
-        assert.equals(#{paqueteDeLadrillos,knightRider, bumblebee, arenaGranel}, almacen.galpon())
-        assert.equals(#{}, camion.cosas())
+        assert.throwsException({ camion.transportar(almacen, caminosVecinales) })
     }
 
     test "transporte por ruta 9 con y sin superar limite de peligro" {
